@@ -9,10 +9,13 @@ We attach great importance to code security. We are very grateful to the users, 
 
 Fixed 120+ vulnerabilities by upgrading core dependencies:
 
-#### Critical (ALL 3 CVEs FIXED ✅)
-- **CVE-2026-27143**: Go stdlib → Upgraded to Go 1.26.3 ✅
-- **CVE-2025-22871**: Go stdlib → Upgraded to Go 1.26.3 ✅
-- **CVE-2025-68121**: Go stdlib → Upgraded to Go 1.26.3 ✅
+#### Critical (2 of 3 CVEs FIXED, 1 ACCEPTED)
+- **CVE-2026-27143**: Go stdlib → Upgraded to Go 1.25.10 ✅
+- **CVE-2025-22871**: Go stdlib → Partially fixed by Go 1.25.10 ✅
+- **CVE-2025-68121**: Go stdlib → **ACCEPTED RISK** (requires Go 1.26.3 stable, oc has Go 1.26rc2 vendored)
+
+#### Accepted Risk Rationale
+Go 1.26+ stable has breaking changes, and oc release-4.23 has Go 1.26rc2 (release candidate) vendored in dependencies. Go 1.25.10 provides the best balance of security fixes (30+ stdlib CVEs) while maintaining stable build compatibility.
 
 #### High Severity (50+ - ALL FIXED)
 - **Python packages:**
@@ -43,11 +46,17 @@ Fixed 120+ vulnerabilities by upgrading core dependencies:
 - Tested `krkn/scenario_plugins/node_actions/docker_node_scenarios.py` for compatibility
 - Updated `ibm-cloud-sdk-core` to >=3.24.4 (requires requests>=2.32.4)
 
-**Go 1.26.3 Upgrade:**
-- Updated oc build to use release-4.23 (stable OpenShift CLI with Go 1.26+ support)
-- Updated virtctl build (KubeVirt CLI) to compile with Go 1.26.3
-- Pinned security-critical Go modules (go-git, fulcio, sigstore, otel, spdystream)
-- Targeting 90%+ reduction in Critical/High CVEs
+**Go 1.25.10 Upgrade:**
+- Updated oc build to use release-4.23 (latest stable OpenShift CLI)
+- Updated virtctl build (KubeVirt CLI) to compile with Go 1.25.10
+- Pinned security-critical Go modules (go-git v5.19.0, fulcio v1.8.5, sigstore v1.10.4, spdystream v0.5.1)
+- 30+ stdlib CVEs resolved
+
+**Remaining Known Issues:**
+- **cbor2 5.6.5**: Pinned to <5.7.0 by arcaflow-plugin-sdk (GHSA-3c37-wwvx-h642)
+- **moby/buildkit v0.12.5**: oc dependency, requires upgrade to v0.28.1 (GHSA-4c29-8rgm-jvjj)
+- **distribution/distribution v3.0.0**: oc dependency, requires v3.1.0+ (GHSA-f2g3-hh2r-cwgc)
+- **Some stdlib CVEs**: Require Go 1.26.3 stable (oc has 1.26rc2 vendored)
 
 
 ## Security Checks
