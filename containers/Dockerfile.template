@@ -1,17 +1,18 @@
-# Vulnerability Remediation (2026-05-15):
-# - Go 1.26.3: Fixes CVE-2025-22871, CVE-2026-27143, CVE-2025-68121 + 40+ stdlib CVEs
+# Vulnerability Remediation (2026-05-18):
+# - Go 1.25.10: Fixes CVE-2026-27143 + 30+ stdlib CVEs (1.26 incompatible with oc)
 # - docker 7.0+: Native Unix socket support, allows requests>=2.32
 # - moby/buildkit v0.28.1: Fixes GHSA-4c29-8rgm-jvjj
 # - See requirements.txt and SECURITY.md for details
+# Note: CVE-2025-68121 unfixed (requires Go 1.26, incompatible with OpenShift oc)
 
 # oc build
-FROM golang:1.26.3 AS oc-build
+FROM golang:1.25.10 AS oc-build
 RUN apt-get update && apt-get install -y --no-install-recommends libkrb5-dev
 WORKDIR /tmp
 # oc build
 RUN git clone --branch release-4.18 https://github.com/openshift/oc.git
 WORKDIR /tmp/oc
-RUN go mod edit -go 1.26.3 &&\
+RUN go mod edit -go 1.25.10 &&\
     go mod edit -require github.com/moby/buildkit@v0.28.1 &&\
     go mod edit -require github.com/containerd/containerd@v1.7.29 &&\
     go mod edit -require github.com/docker/docker@v27.5.1+incompatible &&\
@@ -29,7 +30,7 @@ RUN make GO_REQUIRED_MIN_VERSION:= oc
 WORKDIR /tmp
 RUN git clone https://github.com/kubevirt/kubevirt.git
 WORKDIR /tmp/kubevirt
-RUN go mod edit -go 1.26.3 &&\
+RUN go mod edit -go 1.25.10 &&\
     go work use &&\
     go build -o virtctl ./cmd/virtctl/
 
