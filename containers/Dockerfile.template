@@ -43,7 +43,10 @@ RUN go mod edit -go 1.25.10 &&\
 WORKDIR /tmp
 RUN git clone --depth 1 --branch v4.44.6 https://github.com/mikefarah/yq.git
 WORKDIR /tmp/yq
-RUN go build -ldflags="-s -w" .
+RUN go mod edit -replace golang.org/x/net=golang.org/x/net@v0.38.0 &&\
+    go mod edit -replace github.com/moby/spdystream=github.com/moby/spdystream@v0.5.1 &&\
+    go mod tidy &&\
+    go build -ldflags="-s -w" .
 
 FROM fedora:45
 ARG PR_NUMBER
