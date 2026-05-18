@@ -23,6 +23,8 @@ RUN go mod edit -go 1.25.10 &&\
     go mod edit -require github.com/Azure/go-ntlmssp@v0.1.1 &&\
     go mod edit -require github.com/sigstore/fulcio@v1.8.5 &&\
     go mod edit -require github.com/sigstore/sigstore@v1.10.4 &&\
+    go mod edit -replace golang.org/x/net=golang.org/x/net@v0.38.0 &&\
+    go mod edit -replace github.com/moby/spdystream=github.com/moby/spdystream@v0.5.1 &&\
     go mod tidy && \
     rm -rf vendor && \
     go mod vendor
