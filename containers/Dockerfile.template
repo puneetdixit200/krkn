@@ -42,6 +42,7 @@ RUN go mod edit -go 1.25.10 &&\
     go mod edit -replace github.com/aws/aws-sdk-go-v2/service/s3=github.com/aws/aws-sdk-go-v2/service/s3@v1.97.3 &&\
     go mod tidy &&\
     go work use &&\
+    go work vendor &&\
     go build -o virtctl ./cmd/virtctl/
 
 # yq build (compile with Go 1.25.10 to avoid stdlib CVEs)
