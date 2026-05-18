@@ -1,8 +1,9 @@
 # Vulnerability Remediation (2026-05-18):
-# - Go 1.26.3: Fixes ALL critical stdlib CVEs (CVE-2026-27143, CVE-2025-68121, CVE-2025-22871)
-# - oc release-5.1: Latest OpenShift CLI with Go 1.26+ support
+# - Go 1.26.3: Targets critical stdlib CVEs (CVE-2026-27143, CVE-2025-68121, CVE-2025-22871)
+# - oc release-4.23: Stable OpenShift CLI with Go 1.26+ support
+# - Fedora 45: Latest base image with updated system packages
 # - docker 7.0+: Native Unix socket support, allows requests>=2.32
-# - moby/buildkit v0.28.1: Fixes GHSA-4c29-8rgm-jvjj
+# - Pinned Go modules: go-git v5.19.0, fulcio v1.8.5, sigstore v1.10.4, otel v1.41.0
 # - See requirements.txt and SECURITY.md for details
 
 # oc build
@@ -10,10 +11,18 @@ FROM golang:1.26.3 AS oc-build
 RUN apt-get update && apt-get install -y --no-install-recommends libkrb5-dev
 WORKDIR /tmp
 # oc build
-RUN git clone --branch release-5.1 https://github.com/openshift/oc.git
+RUN git clone --branch release-4.23 https://github.com/openshift/oc.git
 WORKDIR /tmp/oc
 RUN go mod edit -go 1.26.3 &&\
-    go mod tidy && go mod vendor
+    go mod edit -require github.com/go-git/go-git/v5@v5.19.0 &&\
+    go mod edit -require github.com/go-git/go-billy/v5@v5.9.0 &&\
+    go mod edit -require github.com/moby/spdystream@v0.5.1 &&\
+    go mod edit -require github.com/sigstore/fulcio@v1.8.5 &&\
+    go mod edit -require github.com/sigstore/sigstore@v1.10.4 &&\
+    go mod edit -require go.opentelemetry.io/otel@v1.41.0 &&\
+    go mod tidy && \
+    rm -rf vendor && \
+    go mod vendor
 
 RUN make GO_REQUIRED_MIN_VERSION:= oc
 

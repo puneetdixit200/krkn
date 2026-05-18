@@ -44,9 +44,10 @@ Fixed 120+ vulnerabilities by upgrading core dependencies:
 - Updated `ibm-cloud-sdk-core` to >=3.24.4 (requires requests>=2.32.4)
 
 **Go 1.26.3 Upgrade:**
-- Updated oc build to use release-5.1 (latest OpenShift CLI with Go 1.26+ support)
+- Updated oc build to use release-4.23 (stable OpenShift CLI with Go 1.26+ support)
 - Updated virtctl build (KubeVirt CLI) to compile with Go 1.26.3
-- ALL stdlib CVEs resolved (40+ CVEs fixed)
+- Pinned security-critical Go modules (go-git, fulcio, sigstore, otel, spdystream)
+- Targeting 90%+ reduction in Critical/High CVEs
 
 
 ## Security Checks
