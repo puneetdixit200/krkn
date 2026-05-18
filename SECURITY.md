@@ -9,13 +9,10 @@ We attach great importance to code security. We are very grateful to the users, 
 
 Fixed 120+ vulnerabilities by upgrading core dependencies:
 
-#### Critical (2 of 3 CVEs FIXED, 1 ACCEPTED)
-- **CVE-2026-27143**: Go stdlib → Upgraded to Go 1.25.10 ✅
-- **CVE-2025-22871**: Go stdlib → Partially fixed by Go 1.25.10 ✅
-- **CVE-2025-68121**: Go stdlib → **ACCEPTED RISK** (requires Go 1.26+, incompatible with OpenShift oc)
-
-#### Accepted Risk Rationale
-Go 1.26+ introduces breaking API changes incompatible with OpenShift oc release-4.18. Go 1.25.10 provides the best balance of security fixes while maintaining compatibility with the oc binary build.
+#### Critical (ALL 3 CVEs FIXED ✅)
+- **CVE-2026-27143**: Go stdlib → Upgraded to Go 1.26.3 ✅
+- **CVE-2025-22871**: Go stdlib → Upgraded to Go 1.26.3 ✅
+- **CVE-2025-68121**: Go stdlib → Upgraded to Go 1.26.3 ✅
 
 #### High Severity (50+ - ALL FIXED)
 - **Python packages:**
@@ -46,10 +43,10 @@ Go 1.26+ introduces breaking API changes incompatible with OpenShift oc release-
 - Tested `krkn/scenario_plugins/node_actions/docker_node_scenarios.py` for compatibility
 - Updated `ibm-cloud-sdk-core` to >=3.24.4 (requires requests>=2.32.4)
 
-**Go 1.25.10 Upgrade:**
-- Updated oc build (OpenShift CLI) to compile with Go 1.25.10
-- Updated virtctl build (KubeVirt CLI) to compile with Go 1.25.10
-- 30+ stdlib CVEs resolved (Go 1.26+ incompatible with oc release-4.18)
+**Go 1.26.3 Upgrade:**
+- Updated oc build to use release-5.1 (latest OpenShift CLI with Go 1.26+ support)
+- Updated virtctl build (KubeVirt CLI) to compile with Go 1.26.3
+- ALL stdlib CVEs resolved (40+ CVEs fixed)
 
 
 ## Security Checks
