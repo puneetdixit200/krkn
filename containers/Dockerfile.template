@@ -1,6 +1,6 @@
 # Vulnerability Remediation (2026-05-18):
-# - Go 1.25.10: Stable release, fixes 30+ stdlib CVEs (Go 1.26 has RC dependencies in oc)
-# - oc release-4.23: Latest stable OpenShift CLI
+# - Go 1.25.10: Stable release, fixes 30+ stdlib CVEs
+# - oc release-5.1: Latest OpenShift CLI with newer dependencies
 # - Fedora 45: Latest base image with updated system packages
 # - docker 7.0+: Native Unix socket support, allows requests>=2.32
 # - Pinned Go modules: go-git v5.19.0, fulcio v1.8.5, sigstore v1.10.4
@@ -11,7 +11,7 @@ FROM golang:1.25.10 AS oc-build
 RUN apt-get update && apt-get install -y --no-install-recommends libkrb5-dev
 WORKDIR /tmp
 # oc build
-RUN git clone --branch release-4.23 https://github.com/openshift/oc.git
+RUN git clone --branch release-5.1 https://github.com/openshift/oc.git
 WORKDIR /tmp/oc
 RUN go mod edit -go 1.25.10 &&\
     go mod edit -require github.com/go-git/go-git/v5@v5.19.0 &&\
