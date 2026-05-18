@@ -1,8 +1,8 @@
 # Vulnerability Remediation (2026-05-18):
-# - Go 1.25.10: Stable release, fixes 30+ stdlib CVEs
+# - Go 1.25.10: Stable release used for all Go binaries (oc, virtctl, yq)
 # - oc release-5.1: Latest OpenShift CLI with newer dependencies
 # - Fedora 45: Latest base image with updated system packages
-# - yq: Installed from official release instead of Fedora (which has Go 1.26rc2)
+# - yq v4.44.6: Compiled from source with Go 1.25.10 (Fedora/latest have Go 1.26.x)
 # - docker 7.0+: Native Unix socket support, allows requests>=2.32
 # - Pinned Go modules: go-git v5.19.0, fulcio v1.8.5, sigstore v1.10.4
 # - See requirements.txt and SECURITY.md for accepted risks
@@ -34,6 +34,12 @@ RUN go mod edit -go 1.25.10 &&\
     go work use &&\
     go build -o virtctl ./cmd/virtctl/
 
+# yq build (compile with Go 1.25.10 to avoid stdlib CVEs)
+WORKDIR /tmp
+RUN git clone --depth 1 --branch v4.44.6 https://github.com/mikefarah/yq.git
+WORKDIR /tmp/yq
+RUN go build -ldflags="-s -w" .
+
 FROM fedora:45
 ARG PR_NUMBER
 ARG TAG
@@ -50,13 +56,10 @@ RUN dnf update && dnf install -y --setopt=install_weak_deps=False \
     git python${PYTHON_VERSION} jq gettext wget which ipmitool openssh-server &&\
     dnf clean all
 
-# Install yq from official release (Fedora's yq is compiled with Go 1.26rc2)
-RUN wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && \
-    chmod +x /usr/bin/yq
-
-# copy oc client binary from oc-build image
+# copy oc, virtctl, yq binaries from oc-build image
 COPY --from=oc-build /tmp/oc/oc /usr/bin/oc
 COPY --from=oc-build /tmp/kubevirt/virtctl /usr/bin/virtctl
+COPY --from=oc-build /tmp/yq/yq /usr/bin/yq
 RUN ln -s /usr/bin/oc /usr/bin/kubectl
 
 # krkn build
