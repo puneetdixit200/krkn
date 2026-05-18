@@ -19,24 +19,40 @@ jobs:
 
     - name: Scan source code and dependencies
       run: |
-        echo "::notice::🔍 Scanning source code and dependencies for vulnerabilities..."
-        grype dir:. --only-fixed -o table || true
+        echo "🔍 Scanning source code and dependencies for vulnerabilities..."
+        grype dir:. --only-fixed -o table > /tmp/grype-source.txt || true
 
         SCAN_OUTPUT=$(grype dir:. --only-fixed -o json)
         CRITICAL=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
         HIGH=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
         MEDIUM=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
 
-        echo "::notice::📊 Vulnerability Summary (with fixes available):"
-        echo "::notice::  🔴 Critical: $CRITICAL"
-        echo "::notice::  🟠 High: $HIGH"
-        echo "::notice::  🟡 Medium: $MEDIUM"
+        # Create Job Summary with table
+        echo "## 🔒 Security Scan - Source Code & Dependencies" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Severity | Count | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔴 Critical | $CRITICAL | $([ $CRITICAL -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🟠 High | $HIGH | $([ $HIGH -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🟡 Medium | $MEDIUM | $([ $MEDIUM -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
 
         if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-          echo "::warning::⚠️ Found $CRITICAL Critical and $HIGH High vulnerabilities in source/dependencies with available fixes!"
+          echo "⚠️ **Found $CRITICAL Critical and $HIGH High vulnerabilities with available fixes**" >> $GITHUB_STEP_SUMMARY
         else
-          echo "::notice::✅ No Critical or High vulnerabilities found in source/dependencies"
+          echo "✅ **No Critical or High vulnerabilities found**" >> $GITHUB_STEP_SUMMARY
         fi
+
+        # Add collapsible full scan results
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "<details>" >> $GITHUB_STEP_SUMMARY
+        echo "<summary>📋 Full Scan Results</summary>" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat /tmp/grype-source.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "</details>" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
 
   build:
     runs-on: ${{ matrix.runner }}
@@ -75,24 +91,40 @@ jobs:
       if: github.event_name == 'pull_request'
       run: |
         IMAGE_NAME="quay.io/krkn-chaos/krkn:pr-${{ github.event.pull_request.number }}-${{ matrix.platform }}"
-        echo "::notice::🔍 Scanning Docker image: $IMAGE_NAME"
-        grype "$IMAGE_NAME" --only-fixed -o table || true
+        echo "🔍 Scanning Docker image: $IMAGE_NAME"
+        grype "$IMAGE_NAME" --only-fixed -o table > /tmp/grype-image-${{ matrix.platform }}.txt || true
 
         SCAN_OUTPUT=$(grype "$IMAGE_NAME" --only-fixed -o json)
         CRITICAL=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
         HIGH=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
         MEDIUM=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
 
-        echo "::notice::📊 Docker Image Vulnerability Summary [${{ matrix.platform }}] (with fixes available):"
-        echo "::notice::  🔴 Critical: $CRITICAL"
-        echo "::notice::  🟠 High: $HIGH"
-        echo "::notice::  🟡 Medium: $MEDIUM"
+        # Create Job Summary with table
+        echo "## 🐳 Docker Image Security Scan - ${{ matrix.platform }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Severity | Count | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔴 Critical | $CRITICAL | $([ $CRITICAL -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🟠 High | $HIGH | $([ $HIGH -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🟡 Medium | $MEDIUM | $([ $MEDIUM -eq 0 ] && echo '✅' || echo '⚠️') |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
 
         if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-          echo "::warning::⚠️ Docker image (${{ matrix.platform }}) has $CRITICAL Critical and $HIGH High vulnerabilities with available fixes!"
+          echo "⚠️ **Found $CRITICAL Critical and $HIGH High vulnerabilities with available fixes**" >> $GITHUB_STEP_SUMMARY
         else
-          echo "::notice::✅ No Critical or High vulnerabilities found in Docker image (${{ matrix.platform }})"
+          echo "✅ **No Critical or High vulnerabilities found**" >> $GITHUB_STEP_SUMMARY
         fi
+
+        # Add collapsible full scan results
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "<details>" >> $GITHUB_STEP_SUMMARY
+        echo "<summary>📋 Full Scan Results</summary>" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat /tmp/grype-image-${{ matrix.platform }}.txt >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "</details>" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
 
     - name: Login to krkn-chaos quay
       if: startsWith(github.ref, 'refs/tags')
