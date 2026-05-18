@@ -15,21 +15,12 @@ RUN go mod edit -go 1.26.3 &&\
     go mod edit -require github.com/moby/buildkit@v0.28.1 &&\
     go mod edit -require github.com/containerd/containerd@v1.7.29 &&\
     go mod edit -require github.com/docker/docker@v27.5.1+incompatible &&\
-    go mod edit -require github.com/distribution/distribution/v3@v3.1.1 &&\
-    go mod edit -require github.com/sigstore/fulcio@v1.8.5 &&\
-    go mod edit -require github.com/sigstore/rekor@v1.5.0 &&\
-    go mod edit -require github.com/sigstore/sigstore@v1.10.4 &&\
     go mod edit -require github.com/opencontainers/runc@v1.2.8 &&\
-    go mod edit -require github.com/go-git/go-git/v5@v5.19.0 &&\
-    go mod edit -require github.com/go-git/go-billy/v5@v5.9.0 &&\
     go mod edit -require github.com/opencontainers/selinux@v1.13.0 &&\
     go mod edit -require github.com/ulikunitz/xz@v0.5.15 &&\
     go mod edit -require golang.org/x/net@v0.40.0 &&\
     go mod edit -require golang.org/x/oauth2@v0.27.0 &&\
     go mod edit -require golang.org/x/crypto@v0.45.0 &&\
-    go mod edit -require github.com/Azure/go-ntlmssp@v0.1.1 &&\
-    go mod edit -require github.com/moby/spdystream@v0.5.1 &&\
-    go mod edit -require github.com/go-jose/go-jose/v4@v4.1.4 &&\
     go mod tidy && go mod vendor
 
 RUN make GO_REQUIRED_MIN_VERSION:= oc

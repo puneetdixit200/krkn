@@ -5,6 +5,39 @@ on:
   pull_request:
 
 jobs:
+  security-scan-source:
+    name: Security Scan - Source Code & Dependencies
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Install Grype
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Scan source code and dependencies
+      run: |
+        echo "::notice::🔍 Scanning source code and dependencies for vulnerabilities..."
+        grype dir:. --only-fixed -o table || true
+
+        SCAN_OUTPUT=$(grype dir:. --only-fixed -o json)
+        CRITICAL=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+        HIGH=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
+        MEDIUM=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
+
+        echo "::notice::📊 Vulnerability Summary (with fixes available):"
+        echo "::notice::  🔴 Critical: $CRITICAL"
+        echo "::notice::  🟠 High: $HIGH"
+        echo "::notice::  🟡 Medium: $MEDIUM"
+
+        if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+          echo "::warning::⚠️ Found $CRITICAL Critical and $HIGH High vulnerabilities in source/dependencies with available fixes!"
+        else
+          echo "::notice::✅ No Critical or High vulnerabilities found in source/dependencies"
+        fi
+
   build:
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -27,10 +60,39 @@ jobs:
         ./containers/compile_dockerfile.sh
         docker buildx build --no-cache \
           --platform linux/${{ matrix.platform }} \
-          -t quay.io/krkn-chaos/krkn \
-          -t quay.io/redhat-chaos/krkn  \
+          -t quay.io/krkn-chaos/krkn:pr-${{ github.event.pull_request.number }}-${{ matrix.platform }} \
+          -t quay.io/redhat-chaos/krkn:pr-${{ github.event.pull_request.number }}-${{ matrix.platform }} \
           containers/ \
-          --build-arg PR_NUMBER=${{ github.event.pull_request.number }}
+          --build-arg PR_NUMBER=${{ github.event.pull_request.number }} \
+          --load
+
+    - name: Install Grype
+      if: github.event_name == 'pull_request'
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Scan Docker image for vulnerabilities
+      if: github.event_name == 'pull_request'
+      run: |
+        IMAGE_NAME="quay.io/krkn-chaos/krkn:pr-${{ github.event.pull_request.number }}-${{ matrix.platform }}"
+        echo "::notice::🔍 Scanning Docker image: $IMAGE_NAME"
+        grype "$IMAGE_NAME" --only-fixed -o table || true
+
+        SCAN_OUTPUT=$(grype "$IMAGE_NAME" --only-fixed -o json)
+        CRITICAL=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length')
+        HIGH=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "High")] | length')
+        MEDIUM=$(echo "$SCAN_OUTPUT" | jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length')
+
+        echo "::notice::📊 Docker Image Vulnerability Summary [${{ matrix.platform }}] (with fixes available):"
+        echo "::notice::  🔴 Critical: $CRITICAL"
+        echo "::notice::  🟠 High: $HIGH"
+        echo "::notice::  🟡 Medium: $MEDIUM"
+
+        if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+          echo "::warning::⚠️ Docker image (${{ matrix.platform }}) has $CRITICAL Critical and $HIGH High vulnerabilities with available fixes!"
+        else
+          echo "::notice::✅ No Critical or High vulnerabilities found in Docker image (${{ matrix.platform }})"
+        fi
 
     - name: Login to krkn-chaos quay
       if: startsWith(github.ref, 'refs/tags')
