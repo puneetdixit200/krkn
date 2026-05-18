@@ -1,23 +1,35 @@
+# Vulnerability Remediation (2026-05-15):
+# - Go 1.26.3: Fixes CVE-2025-22871, CVE-2026-27143, CVE-2025-68121 + 40+ stdlib CVEs
+# - docker 7.0+: Native Unix socket support, allows requests>=2.32
+# - moby/buildkit v0.28.1: Fixes GHSA-4c29-8rgm-jvjj
+# - See requirements.txt and SECURITY.md for details
+
 # oc build
-FROM golang:1.24.9 AS oc-build
+FROM golang:1.26.3 AS oc-build
 RUN apt-get update && apt-get install -y --no-install-recommends libkrb5-dev
 WORKDIR /tmp
 # oc build
 RUN git clone --branch release-4.18 https://github.com/openshift/oc.git
 WORKDIR /tmp/oc
-RUN go mod edit -go 1.24.9 &&\
-    go mod edit -require github.com/moby/buildkit@v0.12.5 &&\
-    go mod edit -require github.com/containerd/containerd@v1.7.29&&\
-    go mod edit -require github.com/docker/docker@v27.5.1+incompatible&&\
-    go mod edit -require github.com/opencontainers/runc@v1.2.8&&\
-    go mod edit -require github.com/go-git/go-git/v5@v5.13.0&&\
-    go mod edit -require github.com/opencontainers/selinux@v1.13.0&&\
-    go mod edit -require github.com/ulikunitz/xz@v0.5.15&&\
-    go mod edit -require golang.org/x/net@v0.38.0&&\
-    go mod edit -require github.com/containerd/containerd@v1.7.27&&\
-    go mod edit -require golang.org/x/oauth2@v0.27.0&&\
-    go mod edit -require golang.org/x/crypto@v0.35.0&&\
-    go mod edit -replace github.com/containerd/containerd@v1.7.27=github.com/containerd/containerd@v1.7.29&&\
+RUN go mod edit -go 1.26.3 &&\
+    go mod edit -require github.com/moby/buildkit@v0.28.1 &&\
+    go mod edit -require github.com/containerd/containerd@v1.7.29 &&\
+    go mod edit -require github.com/docker/docker@v27.5.1+incompatible &&\
+    go mod edit -require github.com/distribution/distribution/v3@v3.1.1 &&\
+    go mod edit -require github.com/sigstore/fulcio@v1.8.5 &&\
+    go mod edit -require github.com/sigstore/rekor@v1.5.0 &&\
+    go mod edit -require github.com/sigstore/sigstore@v1.10.4 &&\
+    go mod edit -require github.com/opencontainers/runc@v1.2.8 &&\
+    go mod edit -require github.com/go-git/go-git/v5@v5.19.0 &&\
+    go mod edit -require github.com/go-git/go-billy/v5@v5.9.0 &&\
+    go mod edit -require github.com/opencontainers/selinux@v1.13.0 &&\
+    go mod edit -require github.com/ulikunitz/xz@v0.5.15 &&\
+    go mod edit -require golang.org/x/net@v0.40.0 &&\
+    go mod edit -require golang.org/x/oauth2@v0.27.0 &&\
+    go mod edit -require golang.org/x/crypto@v0.45.0 &&\
+    go mod edit -require github.com/Azure/go-ntlmssp@v0.1.1 &&\
+    go mod edit -require github.com/moby/spdystream@v0.5.1 &&\
+    go mod edit -require github.com/go-jose/go-jose/v4@v4.1.4 &&\
     go mod tidy && go mod vendor
 
 RUN make GO_REQUIRED_MIN_VERSION:= oc
@@ -26,7 +38,7 @@ RUN make GO_REQUIRED_MIN_VERSION:= oc
 WORKDIR /tmp
 RUN git clone https://github.com/kubevirt/kubevirt.git
 WORKDIR /tmp/kubevirt
-RUN go mod edit -go 1.24.9 &&\
+RUN go mod edit -go 1.26.3 &&\
     go work use &&\
     go build -o virtctl ./cmd/virtctl/
 
@@ -67,7 +79,7 @@ RUN if [ -n "$PR_NUMBER" ]; then git fetch origin pull/${PR_NUMBER}/head:pr-${PR
 RUN if [ -n "$TAG" ]; then git checkout "$TAG";fi
 
 RUN ${PYTHON_CMD} -m ensurepip --upgrade --default-pip
-RUN ${PYTHON_CMD} -m pip install --upgrade pip setuptools==78.1.1
+RUN ${PYTHON_CMD} -m pip install --upgrade pip setuptools>=82.0.1
 
 # removes the the vulnerable versions of setuptools and pip
 RUN rm -rf "$(pip cache dir)"
