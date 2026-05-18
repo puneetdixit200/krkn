@@ -2,6 +2,7 @@
 # - Go 1.25.10: Stable release, fixes 30+ stdlib CVEs
 # - oc release-5.1: Latest OpenShift CLI with newer dependencies
 # - Fedora 45: Latest base image with updated system packages
+# - yq: Installed from official release instead of Fedora (which has Go 1.26rc2)
 # - docker 7.0+: Native Unix socket support, allows requests>=2.32
 # - Pinned Go modules: go-git v5.19.0, fulcio v1.8.5, sigstore v1.10.4
 # - See requirements.txt and SECURITY.md for accepted risks
@@ -46,8 +47,12 @@ ENV KUBECONFIG /home/krkn/.kube/config
 
 # This overwrites any existing configuration in /etc/yum.repos.d/kubernetes.repo
 RUN dnf update && dnf install -y --setopt=install_weak_deps=False \
-    git python${PYTHON_VERSION} jq yq gettext wget which ipmitool openssh-server &&\
+    git python${PYTHON_VERSION} jq gettext wget which ipmitool openssh-server &&\
     dnf clean all
+
+# Install yq from official release (Fedora's yq is compiled with Go 1.26rc2)
+RUN wget -qO /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && \
+    chmod +x /usr/bin/yq
 
 # copy oc client binary from oc-build image
 COPY --from=oc-build /tmp/oc/oc /usr/bin/oc
