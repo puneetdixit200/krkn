@@ -27,7 +27,6 @@ RUN go mod edit -go 1.25.10 &&\
     go mod edit -replace github.com/moby/spdystream=github.com/moby/spdystream@v0.5.1 &&\
     go mod edit -replace github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream=github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream@v1.7.8 &&\
     go mod edit -replace github.com/aws/aws-sdk-go-v2/service/s3=github.com/aws/aws-sdk-go-v2/service/s3@v1.97.3 &&\
-    go mod edit -replace github.com/moby/buildkit=github.com/moby/buildkit@v0.28.1 &&\
     go mod tidy && \
     rm -rf vendor && \
     go mod vendor
