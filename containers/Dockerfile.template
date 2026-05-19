@@ -118,6 +118,5 @@ RUN chmod +x /home/krkn/kraken/containers/entrypoint.sh
 RUN chown -R krkn:krkn /home/krkn && chmod 755 /home/krkn
 USER krkn
 
-ENTRYPOINT ["/bin/bash", "/home/krkn/kraken/conta
-iners/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/home/krkn/kraken/containers/entrypoint.sh"]
 CMD ["--config=config/config.yaml"]
